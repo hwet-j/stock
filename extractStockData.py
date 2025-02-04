@@ -1,7 +1,5 @@
 import yfinance as yf
 import pandas as pd
-from datetime import datetime, timedelta
-import argparse
 
 # 한국 이름 매핑
 ticker_to_korean = {
@@ -28,61 +26,63 @@ ticker_to_korean = {
 }
 
 
-def fetch_stock_data_with_dates(tickers, from_date, to_date):
+def fetch_stock_data(tickers, period="1mo", interval="1d", output_file="stock_data_with_korean.csv"):
     """
-    주어진 날짜 범위로 주식 데이터를 가져와 파일명에 from_date 정보를 포함해 CSV로 저장합니다.
-    :param tickers: 주식 티커 리스트
-    :param from_date: 데이터 시작 날짜 (예: '2024-01-01')
-    :param to_date: 데이터 종료 날짜 (예: '2024-12-31')
+    주식 데이터를 yfinance에서 가져와 CSV로 저장하고 출력
+    :param tickers: 주식 티커 리스트 (예: ['AAPL', 'MSFT', 'GOOGL'])
+    :param period: 데이터 범위 (예: '1d', '5d', '1mo', '1y', 'max')
+    :param interval: 데이터 간격 (예: '1d', '1h', '5m')
+    :param output_file: 저장할 CSV 파일 이름
     """
-    # 파일명에 사용할 타임스탬프를 `from_date`로 설정
-    output_file = f"stock_data_{from_date}.csv"
+
+    # 출력 생략 방지 설정
+    # pd.set_option("display.max_rows", None)  # 최대 행 표시
+    # pd.set_option("display.max_columns", None)  # 최대 열 표시
+    # pd.set_option("display.expand_frame_repr", False)  # 데이터 프레임 가로로 펼쳐서 표시
+    # pd.set_option("display.float_format", "{:.2f}".format)  # 소수점 형식 지정
 
     all_data = []
     for ticker in tickers:
-        print(f"Fetching data for {ticker} from {from_date} to {to_date}...")
+        print(f"Fetching data for {ticker}...")
         try:
-            stock_data = yf.Ticker(ticker).history(start=from_date, end=to_date)
+            stock_data = yf.Ticker(ticker).history(period=period, interval=interval)
             if not stock_data.empty:
-                stock_data = stock_data.reset_index().dropna()
-                stock_data["Ticker"] = ticker
-                stock_data["Korean Name"] = ticker_to_korean.get(ticker, "Unknown")
+                stock_data = stock_data.reset_index()
+                stock_data["Ticker"] = ticker   # Ticker 컬럼 추가
+                stock_data["Korean Name"] = ticker_to_korean.get(ticker, "Unknown")  # 한국 이름 추가
                 all_data.append(stock_data)
             else:
-                print(f"No data found for {ticker} in the given date range.")
+                print(f"No data found for {ticker}")
         except Exception as e:
             print(f"Error fetching data for {ticker}: {e}")
 
     if all_data:
         combined_data = pd.concat(all_data, ignore_index=True)
+        # 필요한 컬럼만 선택
+        """
+        Date: 날짜
+        Open: 시가
+        High: 고가
+        Low: 저가
+        Close: 종가
+        Volume: 거래량
+        Dividends: 배당금
+        Stock Splits: 주식 분할 정보
+        """
         combined_data = combined_data[
             ["Ticker", "Korean Name", "Date", "Open", "High", "Low", "Close", "Volume"]
         ]
+        # CSV로 저장
         combined_data.to_csv(output_file, index=False)
         print(f"Data saved to {output_file}")
-        print(combined_data)
+        print(combined_data)  # 전체 데이터 출력
     else:
         print("No data fetched.")
 
 
 if __name__ == "__main__":
-    # 어제 날짜와 오늘 날짜 계산
-    yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-    today = datetime.now().strftime("%Y-%m-%d")
-
-    # argparse를 사용하여 외부 매개변수 처리 (기본값: 어제부터 오늘까지)
-    parser = argparse.ArgumentParser(description="Fetch stock data from yfinance.")
-    parser.add_argument(
-        "--from_date", type=str, default=yesterday, help="From date in YYYY-MM-DD format (default: yesterday)."
-    )
-    parser.add_argument(
-        "--to_date", type=str, default=today, help="To date in YYYY-MM-DD format (default: today)."
-    )
-    args = parser.parse_args()
-
     tickers = [
         "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NVDA", "BRK-B",
         "V", "JNJ", "PG", "UNH", "HD", "MA", "PFE", "KO", "DIS", "PEP", "BAC", "XOM"
     ]
-
-    fetch_stock_data_with_dates(tickers, args.from_date, args.to_date)
+    fetch_stock_data(tickers, period="1d", interval="1d", output_file="stock_data_with_korean.csv")
