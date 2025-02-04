@@ -17,26 +17,11 @@ DB_CONFIG = {
 
 # 한국 이름 매핑
 ticker_to_korean = {
-    "AAPL": "애플",
-    "MSFT": "마이크로소프트",
-    "GOOGL": "구글",
-    "AMZN": "아마존",
-    "TSLA": "테슬라",
-    "META": "메타 (구 페이스북)",
-    "NVDA": "엔비디아",
-    "BRK-B": "버크셔 해서웨이 B",
-    "V": "비자",
-    "JNJ": "존슨앤드존슨",
-    "PG": "프록터 앤드 갬블",
-    "UNH": "유나이티드헬스",
-    "HD": "홈디포",
-    "MA": "마스터카드",
-    "PFE": "화이자",
-    "KO": "코카콜라",
-    "DIS": "디즈니",
-    "PEP": "펩시코",
-    "BAC": "뱅크오브아메리카",
-    "XOM": "엑슨모빌",
+    "AAPL": "애플", "MSFT": "마이크로소프트", "GOOGL": "구글", "AMZN": "아마존",
+    "TSLA": "테슬라", "META": "메타 (구 페이스북)", "NVDA": "엔비디아", "BRK-B": "버크셔 해서웨이 B",
+    "V": "비자", "JNJ": "존슨앤드존슨", "PG": "프록터 앤드 갬블", "UNH": "유나이티드헬스",
+    "HD": "홈디포", "MA": "마스터카드", "PFE": "화이자", "KO": "코카콜라",
+    "DIS": "디즈니", "PEP": "펩시코", "BAC": "뱅크오브아메리카", "XOM": "엑슨모빌",
 }
 
 # 기본 종목 리스트
@@ -83,6 +68,8 @@ def create_log_tables_if_not_exists():
 
 def log_to_db(step, log_type, ticker, message, from_date, to_date, start_time=None, end_time=None, result=None):
     """ PostgreSQL에 로그 저장 """
+    log_msg = f"[{step}] {log_type} | {ticker or '전체'} | {message} | {from_date} ~ {to_date}"
+    print(log_msg)
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()
@@ -137,12 +124,14 @@ def fetch_stock_data(tickers, from_date, to_date):
 
     while current_date <= datetime.strptime(to_date, "%Y-%m-%d"):
         check_date = current_date.date()
+        print(f"[날짜 확인] {check_date} 데이터 수집 시작")
         all_data = []
         if is_market_closed(check_date):
             log_to_db("휴장", "INFO", None, f"{check_date} 휴장일(주말포함)", from_date, to_date)
         else:
             for ticker in tickers:
                 try:
+                    # print(f"[데이터 수집] {ticker} | {check_date} 데이터 가져오는 중...")
                     stock_data = yf.Ticker(ticker).history(start=str(check_date),
                                                            end=str(check_date + timedelta(days=1)))
 
@@ -174,7 +163,8 @@ def fetch_stock_data(tickers, from_date, to_date):
 
         current_date += timedelta(days=1)
 
-
+    end_time = datetime.now()
+    log_to_db("완료", "INFO", None, "데이터 수집 프로세스 완료", from_date, to_date, start_time=start_time, end_time=end_time, result="성공")
 
 def main():
     """ 실행 코드: 커맨드라인 인자 처리 및 데이터 수집 실행 """
