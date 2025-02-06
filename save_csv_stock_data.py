@@ -103,7 +103,7 @@ def save_csv(data, from_date):
     """ CSV 파일을 저장할 폴더를 생성하고 저장 """
     try:
         year, month, _ = str(from_date).split("-")
-        folder_path = os.path.join("data", year, month)
+        folder_path = os.path.join("csv", year, month)
         os.makedirs(folder_path, exist_ok=True)
 
         file_name = f"stock_data_{from_date}.csv"
