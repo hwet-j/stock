@@ -110,6 +110,11 @@ def save_csv(data, from_date):
         file_path = os.path.join(folder_path, file_name)
         data.to_csv(file_path, index=False)
 
+        # CSV 파일 경로를 로그 파일에 기록 (parquet 파일 변환을 위해)
+        log_file_path = "/home/hwechang_jeong/stock/exe/csv_files.log"
+        with open(log_file_path, "a") as log_file:
+            log_file.write(file_path + "\n")
+
         return file_path
     except Exception as e:
         return print(e)
