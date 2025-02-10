@@ -68,6 +68,13 @@ def store_parquet_to_db(parquet_file):
         df = pd.read_parquet(parquet_file)
 
         df.columns = [col.lower() for col in df.columns]
+
+        # 'date' 컬럼 확인
+        if "date" not in df.columns:
+            print(f"[Error] 'date' 컬럼이 없습니다: {parquet_file}")
+            print(f"[DEBUG] Parquet 컬럼 목록: {df.columns.tolist()}")
+            return
+
         df["date"] = pd.to_datetime(df["date"]).dt.date
 
         conn = psycopg2.connect(**DB_CONFIG)
