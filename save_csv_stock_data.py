@@ -164,7 +164,7 @@ def fetch_stock_data(tickers, from_date, to_date):
                         log_to_db("추출", "ERROR", ticker, f"{check_date} 데이터 없음", from_date, to_date, result="실패")
                         continue
 
-                    # stock_data = stock_data.reset_index()
+                    stock_data = stock_data.reset_index()
                     # Ticker 컬럼, Korean Name 컬럼 추가
                     stock_data["Ticker"] = ticker
                     stock_data["Korean Name"] = ticker_to_korean.get(ticker, "Unknown")
