@@ -1,0 +1,26 @@
+#########################
+#####설치 라이브러리#####
+#########################
+
+# 주식 데이터 
+pip install yfinanace
+
+# 데이터 처리
+pip install pandas
+
+# PostgreSQL 연결
+pip install psycopg2
+pip install psycopg2-binary
+
+# 미국 증시 휴장일 확인
+pip install pandad_market_calendars
+
+# Parquet 파일 변환 
+pip install pyarrow
+
+
+###################
+python stock_fetch.py --tickers AAPL MSFT TSLA --from_date 2024-02-01 --to_date 2024-02-07
+
+
+
