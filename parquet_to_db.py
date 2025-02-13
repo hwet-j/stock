@@ -74,7 +74,11 @@ def store_parquet_to_db(parquet_file):
             print(f"[DEBUG] Parquet 컬럼 목록: {df.columns.tolist()}")
             return
 
-        df["date"] = pd.to_datetime(df["date"]).dt.date
+        # datetime 변환 (utc 적용)
+        if not pd.api.types.is_datetime64_any_dtype(df["date"]):
+            df["date"] = pd.to_datetime(df["date"], utc=True)
+
+        df["date"] = df["date"].dt.date
 
         conn = psycopg2.connect(**DB_CONFIG)
         table_name = "stock_data"
