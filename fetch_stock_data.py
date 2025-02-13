@@ -167,7 +167,7 @@ def fetch_stock_data(tickers, from_date, to_date):
                     stock_data = stock.history(start=str(check_date), end=str(check_date + timedelta(days=1)))
 
                     if stock_data.empty:
-                        log_to_db("추출", "ERROR", ticker, f"{check_date} 데이터 없음", from_date, to_date, start_time=extract_start_time, end_time=datetime.now(), result="실패")
+                        log_to_db("추출", "ERROR", ticker, f"데이터 없음", from_date, to_date, start_time=extract_start_time, end_time=datetime.now(), result="실패")
                         continue
 
                     stock_data = stock_data.reset_index()
@@ -176,10 +176,10 @@ def fetch_stock_data(tickers, from_date, to_date):
 
                     all_data.append(stock_data)
 
-                    log_to_db("추출", "INFO", ticker, f"{check_date} 데이터 가져오기 완료", from_date, to_date, start_time=extract_start_time, end_time=datetime.now(), result="성공")
+                    log_to_db("추출", "INFO", ticker, f"데이터 가져오기 완료", from_date, to_date, start_time=extract_start_time, end_time=datetime.now(), result="성공")
 
                 except Exception as e:
-                    log_to_db("추출", "ERROR", ticker, f"{check_date} 오류: {e}", from_date, to_date, start_time=extract_start_time, end_time=datetime.now(), result="실패")
+                    log_to_db("추출", "ERROR", ticker, f"오류: {e}", from_date, to_date, start_time=extract_start_time, end_time=datetime.now(), result="실패")
             # 모든 주식데이터를 하나의 데이터프레임으로 합침
             if all_data:
                 csv_start_time = datetime.now()
