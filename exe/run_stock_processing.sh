@@ -25,7 +25,7 @@ eval "$(pyenv virtualenv-init -)"
 pyenv activate hwetenv
 
 # 주식 데이터 추출  (인자 포함)
-echo "[INFO] save_csv_stock_data.py 실행 중..."
+echo "[INFO] fetch_stock_data.py 실행 중..."
 # /home/hwechang_jeong/.pyenv/versions/3.9.16/bin/python /home/hwechang_jeong/stock/fetch_stock_data.py $ARGS >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
 
 python /home/hwechang_jeong/stock/fetch_stock_data.py $ARGS >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
