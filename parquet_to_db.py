@@ -93,7 +93,7 @@ def store_parquet_to_db(parquet_file):
             create_partition(conn, table_name, year, month)
 
             cur.execute(insert_query, (
-                row["date"], row["ticker"], row["korean name"],
+                row["date"], row["ticker"],
                 row["open"], row["high"], row["low"], row["close"],
                 row["volume"], row["dividends"], row["stock splits"]
             ))
