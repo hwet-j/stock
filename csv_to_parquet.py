@@ -256,12 +256,12 @@ if __name__ == "__main__":
 
 """
 # 가장 마지막 실행으로 생성된 csv파일 변환
-python csvToParquet.py
+python csv_to_parquet.py
 # 특정 csv파일 하나 변환
-python csvToParquet.py --csv_file "csv/2024/02/stock_data_2024-02-06.csv"
+python csv_to_parquet.py --csv_file "csv/2024/02/stock_data_2024-02-06.csv"
 # 폴더를 지정해 폴더내 csv 변환
-python csvToParquet.py --folder "csv/2024/02"
+python csv_to_parquet.py --folder "csv/2024/02"
 # csv 파일 삭제 추가
-python csvToParquet.py --folder "csv/2024/02" --delete_csv
+python csv_to_parquet.py --folder "csv/2024/02" --delete_csv
 
 """

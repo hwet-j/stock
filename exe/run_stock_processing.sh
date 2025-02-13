@@ -26,32 +26,32 @@ pyenv activate hwetenv
 
 # 주식 데이터 추출  (인자 포함)
 echo "[INFO] save_csv_stock_data.py 실행 중..."
-# /home/hwechang_jeong/.pyenv/versions/3.9.16/bin/python /home/hwechang_jeong/stock/save_csv_stock_data.py $ARGS >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
+# /home/hwechang_jeong/.pyenv/versions/3.9.16/bin/python /home/hwechang_jeong/stock/fetch_stock_data.py $ARGS >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
 
-python /home/hwechang_jeong/stock/save_csv_stock_data.py $ARGS >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
+python /home/hwechang_jeong/stock/fetch_stock_data.py $ARGS >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
 # 실행 결과 확인
 if [ $? -ne 0 ]; then
-    echo "[ERROR] save_csv_stock_data.py 실행 실패" >> /home/hwechang_jeong/stock/exe/stock_data.log
+    echo "[ERROR] fetch_stock_data.py 실행 실패" >> /home/hwechang_jeong/stock/exe/stock_data.log
     exit 1
 fi
 
 # CSV 파일 Parquet파일 변환
-echo "[INFO] csvToParquet.py 실행 중..."
-#/home/hwechang_jeong/.pyenv/versions/3.9.16/bin/python /home/hwechang_jeong/stock/csvToParquet.py >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
+echo "[INFO] csv_to_parquet.py 실행 중..."
+#/home/hwechang_jeong/.pyenv/versions/3.9.16/bin/python /home/hwechang_jeong/stock/csv_to_parquet.py >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
 
-python /home/hwechang_jeong/stock/csvToParquet.py >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
+python /home/hwechang_jeong/stock/csv_to_parquet.py >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
 if [ $? -ne 0 ]; then
-    echo "[ERROR] csvToParquet.py 실행 실패" >> /home/hwechang_jeong/stock/exe/stock_data.log
+    echo "[ERROR] csv_to_parquet.py 실행 실패" >> /home/hwechang_jeong/stock/exe/stock_data.log
     exit 1
 fi
 
 # Parquet파일 DB 저장
-echo "[INFO] parquetToDB.py 실행 중..."
-#/home/hwechang_jeong/.pyenv/versions/3.9.16/bin/python /home/hwechang_jeong/stock/parquetToDB.py >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
+echo "[INFO] parquet_to_db.py 실행 중..."
+#/home/hwechang_jeong/.pyenv/versions/3.9.16/bin/python /home/hwechang_jeong/stock/parquet_to_db.py >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
 
-python /home/hwechang_jeong/stock/parquetToDB.py >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
+python /home/hwechang_jeong/stock/parquet_to_db.py >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
 if [ $? -ne 0 ]; then
-    echo "[ERROR] parquetToDB.py 실행 실패" >> /home/hwechang_jeong/stock/exe/stock_data.log
+    echo "[ERROR] parquet_to_db.py 실행 실패" >> /home/hwechang_jeong/stock/exe/stock_data.log
     exit 1
 fi
 

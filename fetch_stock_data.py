@@ -16,13 +16,13 @@ DB_CONFIG = {
 }
 
 # 한국 이름 매핑
-ticker_to_korean = {
-    "AAPL": "애플", "MSFT": "마이크로소프트", "GOOGL": "구글", "AMZN": "아마존",
-    "TSLA": "테슬라", "META": "메타 (구 페이스북)", "NVDA": "엔비디아", "BRK-B": "버크셔 해서웨이 B",
-    "V": "비자", "JNJ": "존슨앤드존슨", "PG": "프록터 앤드 갬블", "UNH": "유나이티드헬스",
-    "HD": "홈디포", "MA": "마스터카드", "PFE": "화이자", "KO": "코카콜라",
-    "DIS": "디즈니", "PEP": "펩시코", "BAC": "뱅크오브아메리카", "XOM": "엑슨모빌",
-}
+# ticker_to_korean = {
+#     "AAPL": "애플", "MSFT": "마이크로소프트", "GOOGL": "구글", "AMZN": "아마존",
+#     "TSLA": "테슬라", "META": "메타 (구 페이스북)", "NVDA": "엔비디아", "BRK-B": "버크셔 해서웨이 B",
+#     "V": "비자", "JNJ": "존슨앤드존슨", "PG": "프록터 앤드 갬블", "UNH": "유나이티드헬스",
+#     "HD": "홈디포", "MA": "마스터카드", "PFE": "화이자", "KO": "코카콜라",
+#     "DIS": "디즈니", "PEP": "펩시코", "BAC": "뱅크오브아메리카", "XOM": "엑슨모빌",
+# }
 
 # 기본 종목 리스트
 DEFAULT_TICKERS = [
@@ -165,9 +165,8 @@ def fetch_stock_data(tickers, from_date, to_date):
                         continue
 
                     stock_data = stock_data.reset_index()
-                    # Ticker 컬럼, Korean Name 컬럼 추가
+                    # Ticker 컬럼 추가
                     stock_data["Ticker"] = ticker
-                    stock_data["Korean Name"] = ticker_to_korean.get(ticker, "Unknown")
 
                     all_data.append(stock_data)
 

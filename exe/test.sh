@@ -16,7 +16,7 @@ eval "$(pyenv init -)"
 
 echo "[INFO] 실행 시작" | tee -a "$LOG_FILE"
 
-# 1️⃣ 주식 데이터 저장 (save_csv_stock_data.py 실행)
+# 1️⃣ 주식 데이터 저장 (fetch_stock_data.py 실행)
 echo "[INFO] 주식 데이터 저장 시작" | tee -a "$LOG_FILE"
 $PYTHON_BIN /home/hwechang_jeong/stock/save_csv_stock_data.py "$@" >> "$LOG_FILE" 2>&1
 
