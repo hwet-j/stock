@@ -140,7 +140,7 @@ def fetch_stock_data(tickers, from_date, to_date):
     """ 주식 데이터를 가져오고 CSV 및 DB에 저장 """
     start_time = datetime.now()     # 데이터 수집 시작 시간 기록
     # 시작 로그를 DB에 저장
-    log_to_db("시작", "INFO", None, "데이터 수집 프로세스 시작", from_date, to_date, start_time=start_time, result="진행 중")
+    log_to_db("시작", "INFO", None, "데이터 수집 프로세스 시작", from_date, to_date, start_time=start_time, end_time=start_time, result="진행 중")
 
     # from_date를 datetime 객체로 변환 (문자열 -> 날짜 형식)
     current_date = datetime.strptime(from_date, "%Y-%m-%d")
