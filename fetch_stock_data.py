@@ -84,6 +84,7 @@ def log_to_db(step, log_type, ticker, message, from_date, to_date, start_time=No
             (step, log_type, ticker, message, from_date, to_date, start_time, end_time, result)
         )
     except Exception as e:
+        print(f"[ERROR] 로그 입력 실패: {e}")  # ← 에러 메시지 출력 추가
         # DB 저장 실패 시 log_backup.txt에 백업
         with open("log_backup.txt", "a") as log_file:
             log_file.write(f"{log_msg} | [로그 저장 실패] {e}\n")
