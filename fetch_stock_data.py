@@ -140,7 +140,7 @@ def fetch_stock_data(tickers, from_date, to_date):
     """ 주식 데이터를 가져오고 CSV 및 DB에 저장 """
     start_time = datetime.now()     # 데이터 수집 시작 시간 기록
     # 시작 로그를 DB에 저장
-    log_to_db("시작", "INFO", None, "데이터 수집 프로세스 시작", from_date, to_date, start_time=start_time, end_time=start_time, result="진행 중")
+    log_to_db("시작", "INFO", "ALL", "데이터 수집 프로세스 시작", from_date, to_date, start_time=start_time, end_time=start_time, result="진행 중")
 
     # from_date를 datetime 객체로 변환 (문자열 -> 날짜 형식)
     current_date = datetime.strptime(from_date, "%Y-%m-%d")
@@ -154,7 +154,7 @@ def fetch_stock_data(tickers, from_date, to_date):
         
         # 휴장일 확인
         if is_market_closed(check_date):
-            log_to_db("휴장", "INFO", None, f"{check_date} 휴장일(주말포함)", from_date, from_date, start_time=extract_start_time, end_time=datetime.now())
+            log_to_db("휴장", "INFO", "ALL", f"{check_date} 휴장일(주말포함)", from_date, from_date, start_time=extract_start_time, end_time=datetime.now(), result="휴장")
         else:
             all_data = []   # 수집된 데이터를 저장할 리스트
 
@@ -189,16 +189,16 @@ def fetch_stock_data(tickers, from_date, to_date):
                 file_path = save_csv(combined_data, check_date)
 
                 if file_path:
-                    log_to_db("CSV 저장", "INFO", None, f"파일 저장 완료: {file_path}", check_date, check_date, start_time=csv_start_time, end_time=datetime.now(), result="성공")
+                    log_to_db("CSV 저장", "INFO", "ALL", f"파일 저장 완료: {file_path}", check_date, check_date, start_time=csv_start_time, end_time=datetime.now(), result="성공")
                 else:
-                    log_to_db("CSV 저장", "ERROR", None, "CSV 저장 실패", check_date, check_date, start_time=csv_start_time, end_time=datetime.now(), result="실패")
+                    log_to_db("CSV 저장", "ERROR", "ALL", "CSV 저장 실패", check_date, check_date, start_time=csv_start_time, end_time=datetime.now(), result="실패")
             else:
-                log_to_db("시작", "ERROR", None, "수집된 데이터 없음", check_date, check_date, start_time=extract_start_time, end_time=datetime.now(), result="실패")
+                log_to_db("시작", "ERROR", "ALL", "수집된 데이터 없음", check_date, check_date, start_time=extract_start_time, end_time=datetime.now(), result="실패")
 
         current_date += timedelta(days=1)
     # 데이터 수집 완료 시간 기록 (전체 csv 저장)
     end_time = datetime.now()
-    log_to_db("완료", "INFO", None, "데이터 수집 프로세스 완료", from_date, to_date, start_time=start_time, end_time=end_time, result="성공")
+    log_to_db("완료", "INFO", "ALL", "데이터 수집 프로세스 완료", from_date, to_date, start_time=start_time, end_time=end_time, result="성공")
 
 def main():
     """ 실행 코드: 커맨드라인 인자 처리 및 데이터 수집 실행 """
