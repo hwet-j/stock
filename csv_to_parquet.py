@@ -83,12 +83,12 @@ def convert_csv_to_parquet(csv_file, delete_csv=False):
 
     if not os.path.exists(csv_file):
         print(f"[Error] 파일이 존재하지 않음: {csv_file}")
-        log_to_db("Parquet 변환", "ERROR", None, "파일이 존재하지 않음", start_time=start_time, result="실패")
+        log_to_db("Parquet 변환", "ERROR", "ALL", "파일이 존재하지 않음", start_time=start_time, result="실패")
         return
 
     if not csv_file.endswith(".csv"):
         print(f"[Error] CSV 파일이 아님: {csv_file}")
-        log_to_db("Parquet 변환", "ERROR", None, "CSV 파일이 아님", start_time=start_time, result="실패")
+        log_to_db("Parquet 변환", "ERROR", "ALL", "CSV 파일이 아님", start_time=start_time, result="실패")
         return
 
     # 원본 CSV 파일이 있는 폴더 구조 유지하여 Parquet 저장
@@ -115,18 +115,18 @@ def convert_csv_to_parquet(csv_file, delete_csv=False):
 
         end_time = datetime.now()
         print(f"[Parquet 변환 완료] {parquet_file}")
-        log_to_db("Parquet 변환", "INFO", None, f"변환 완료: {parquet_file}", from_date, to_date, start_time, end_time, "성공")
+        log_to_db("Parquet 변환", "INFO", "ALL", f"변환 완료: {parquet_file}", from_date, to_date, start_time, end_time, "성공")
         log_parquet_conversion_to_file(parquet_file)
 
         if delete_csv:
             os.remove(csv_file)
             print(f"[CSV 삭제] {csv_file}")
-            log_to_db("CSV 삭제", "INFO", None, "CSV 파일 삭제 완료", from_date, to_date, end_time, end_time, "성공")
+            log_to_db("CSV 삭제", "INFO", "ALL", "CSV 파일 삭제 완료", from_date, to_date, end_time, end_time, "성공")
 
     except Exception as e:
         end_time = datetime.now()
         print(f"[Error] {csv_file}: {e}")
-        log_to_db("Parquet 변환", "ERROR", None, f"오류 발생: {e}", from_date, to_date, start_time, end_time, "실패")
+        log_to_db("Parquet 변환", "ERROR", "ALL", f"오류 발생: {e}", from_date, to_date, start_time, end_time, "실패")
 
 
 def convert_logged_csv_to_parquet(log_file=DEFAULT_LOG_FILE_PATH, delete_csv=False):
