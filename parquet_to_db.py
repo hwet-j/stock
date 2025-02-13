@@ -23,7 +23,6 @@ def create_partition_table(conn, table_name):
         CREATE TABLE IF NOT EXISTS {table_name} (
             date DATE NOT NULL,
             ticker VARCHAR(10) NOT NULL,
-            korean_name TEXT,
             open NUMERIC,
             high NUMERIC,
             low NUMERIC,
@@ -84,8 +83,8 @@ def store_parquet_to_db(parquet_file):
 
         cur = conn.cursor()
         insert_query = f"""
-        INSERT INTO {table_name} (date, ticker, korean_name, open, high, low, close, volume, dividends, stock_splits)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO {table_name} (date, ticker, open, high, low, close, volume, dividends, stock_splits)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (date, ticker) DO NOTHING;
         """
 
