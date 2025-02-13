@@ -154,7 +154,7 @@ def fetch_stock_data(tickers, from_date, to_date):
         
         # 휴장일 확인
         if is_market_closed(check_date):
-            log_to_db("휴장", "INFO", None, f"{check_date} 휴장일(주말포함)", from_date, to_date, start_time=extract_start_time, end_time=datetime.now())
+            log_to_db("휴장", "INFO", None, f"{check_date} 휴장일(주말포함)", from_date, from_date, start_time=extract_start_time, end_time=datetime.now())
         else:
             all_data = []   # 수집된 데이터를 저장할 리스트
 
@@ -167,7 +167,7 @@ def fetch_stock_data(tickers, from_date, to_date):
                     stock_data = stock.history(start=str(check_date), end=str(check_date + timedelta(days=1)))
 
                     if stock_data.empty:
-                        log_to_db("추출", "ERROR", ticker, f"데이터 없음", from_date, to_date, start_time=extract_start_time, end_time=datetime.now(), result="실패")
+                        log_to_db("추출", "ERROR", ticker, f"데이터 없음", check_date, check_date, start_time=extract_start_time, end_time=datetime.now(), result="실패")
                         continue
 
                     stock_data = stock_data.reset_index()
@@ -176,10 +176,10 @@ def fetch_stock_data(tickers, from_date, to_date):
 
                     all_data.append(stock_data)
 
-                    log_to_db("추출", "INFO", ticker, f"데이터 가져오기 완료", from_date, to_date, start_time=extract_start_time, end_time=datetime.now(), result="성공")
+                    log_to_db("추출", "INFO", ticker, f"데이터 가져오기 완료", check_date, check_date, start_time=extract_start_time, end_time=datetime.now(), result="성공")
 
                 except Exception as e:
-                    log_to_db("추출", "ERROR", ticker, f"오류: {e}", from_date, to_date, start_time=extract_start_time, end_time=datetime.now(), result="실패")
+                    log_to_db("추출", "ERROR", ticker, f"오류: {e}", check_date, check_date, start_time=extract_start_time, end_time=datetime.now(), result="실패")
             # 모든 주식데이터를 하나의 데이터프레임으로 합침
             if all_data:
                 csv_start_time = datetime.now()
@@ -189,11 +189,11 @@ def fetch_stock_data(tickers, from_date, to_date):
                 file_path = save_csv(combined_data, check_date)
 
                 if file_path:
-                    log_to_db("CSV 저장", "INFO", None, f"파일 저장 완료: {file_path}", from_date, to_date, start_time=csv_start_time, end_time=datetime.now(), result="성공")
+                    log_to_db("CSV 저장", "INFO", None, f"파일 저장 완료: {file_path}", check_date, check_date, start_time=csv_start_time, end_time=datetime.now(), result="성공")
                 else:
-                    log_to_db("CSV 저장", "ERROR", None, "CSV 저장 실패", from_date, to_date, start_time=csv_start_time, end_time=datetime.now(), result="실패")
+                    log_to_db("CSV 저장", "ERROR", None, "CSV 저장 실패", check_date, check_date, start_time=csv_start_time, end_time=datetime.now(), result="실패")
             else:
-                log_to_db("시작", "ERROR", None, "수집된 데이터 없음", from_date, to_date, start_time=extract_start_time, end_time=datetime.now(), result="실패")
+                log_to_db("시작", "ERROR", None, "수집된 데이터 없음", check_date, check_date, start_time=extract_start_time, end_time=datetime.now(), result="실패")
 
         current_date += timedelta(days=1)
     # 데이터 수집 완료 시간 기록 (전체 csv 저장)
