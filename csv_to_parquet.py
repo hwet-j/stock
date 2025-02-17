@@ -4,6 +4,7 @@ import pandas as pd
 import argparse
 import psycopg2
 from datetime import datetime
+import subprocess
 
 DEFAULT_PARQUET_LOG_FILE = "/home/hwechang_jeong/stock/exe/parquet_files.log"
 
@@ -128,6 +129,72 @@ def convert_csv_to_parquet(csv_file, delete_csv=False):
         print(f"[Error] {csv_file}: {e}")
         log_to_db("Parquet 변환", "ERROR", "ALL", f"오류 발생: {e}", from_date, to_date, start_time, end_time, "실패")
 
+def store_csv_to_db_with_pgfutter(csv_file, table_name="stock_data"):
+    """
+    pgfutter를 사용하여 CSV 데이터를 PostgreSQL에 저장
+    (1) 임시 테이블에 저장
+    (2) 데이터 검증 후 실제 테이블로 이동
+    (3) 임시 테이블 삭제
+
+    :param csv_file: 변환할 CSV 파일 경로
+    :param table_name: 저장할 PostgreSQL 테이블명
+    """
+    temp_table_name = f"{table_name}_temp"  # 임시 테이블 이름
+    conn = None
+
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+
+        # (1) 임시 테이블 생성 (실제 테이블과 동일한 구조)
+        cur.execute(f"CREATE TEMP TABLE {temp_table_name} (LIKE {table_name} INCLUDING ALL);")
+        conn.commit()
+        print(f"[INFO] 임시 테이블 생성 완료: {temp_table_name}")
+
+        # (2) pgfutter를 사용하여 임시 테이블에 데이터 삽입
+        command = [
+            "pgfutter", "csv",
+            "--db", DB_CONFIG["dbname"],
+            "--host", DB_CONFIG["host"],
+            "--port", DB_CONFIG["port"],
+            "--user", DB_CONFIG["user"],
+            "--pass", DB_CONFIG["password"],
+            "--schema", "public",
+            "--table", temp_table_name,
+            csv_file
+        ]
+        subprocess.run(command, check=True)
+        print(f"[INFO] CSV 데이터 임시 테이블({temp_table_name}) 저장 완료")
+
+        # (3) 데이터 검증 (예: 중복 제거)
+        cur.execute(f"DELETE FROM {temp_table_name} WHERE id IN (SELECT id FROM {table_name});")
+        conn.commit()
+        print(f"[INFO] 중복 데이터 제거 완료")
+
+        # (4) 임시 테이블 데이터를 실제 테이블로 이동
+        cur.execute(f"INSERT INTO {table_name} SELECT * FROM {temp_table_name};")
+        conn.commit()
+        print(f"[INFO] 데이터 이동 완료: {table_name}")
+
+        # (5) 임시 테이블 삭제
+        cur.execute(f"DROP TABLE {temp_table_name};")
+        conn.commit()
+        print(f"[INFO] 임시 테이블 삭제 완료: {temp_table_name}")
+
+        return True
+
+    except subprocess.CalledProcessError as e:
+        print(f"[Error] pgfutter 실행 실패: {e}")
+        return False
+
+    except Exception as e:
+        print(f"[Error] 데이터베이스 작업 중 오류 발생: {e}")
+        return False
+
+    finally:
+        if conn:
+            conn.close()
+
 
 def convert_logged_csv_to_parquet(log_file=DEFAULT_LOG_FILE_PATH, delete_csv=False):
     """
@@ -145,7 +212,8 @@ def convert_logged_csv_to_parquet(log_file=DEFAULT_LOG_FILE_PATH, delete_csv=Fal
         return
 
     for csv_file in csv_files:
-        convert_csv_to_parquet(csv_file, delete_csv=delete_csv)
+        convert_csv_to_parquet(csv_file)
+        store_csv_to_db_with_pgfutter(csv_file)
 
     # 변환 완료 후 로그 파일 초기화
     os.remove(log_file)
@@ -164,94 +232,24 @@ def convert_all_csv_to_parquet(root_folder="csv", delete_csv=False):
                 convert_csv_to_parquet(csv_path, delete_csv=delete_csv)
 
 
-def store_parquet_to_db(parquet_file):
-    """
-    단일 Parquet 파일을 PostgreSQL 데이터베이스에 저장
-
-    :param parquet_file: 변환할 Parquet 파일 경로
-    """
-    start_time = datetime.now()
-
-    if not os.path.exists(parquet_file):
-        print(f"[Error] 파일이 존재하지 않음: {parquet_file}")
-        log_to_db("DB 저장", "ERROR", None, "파일이 존재하지 않음", start_time=start_time, result="실패")
-        return
-
-    # 파일명에서 ticker, from_date, to_date 추출
-    parquet_filename = os.path.basename(parquet_file)
-    ticker = parquet_filename.split("_")[0] if "_" in parquet_filename else None
-
-    try:
-        date_part = parquet_filename.split("_")[-1].replace(".parquet", "")
-        from_date = to_date = datetime.strptime(date_part, "%Y-%m-%d").date()
-    except ValueError:
-        from_date = to_date = None
-
-    try:
-        # Parquet 파일을 읽어서 DataFrame 변환
-        df = pd.read_parquet(parquet_file)
-
-        # DB에 저장
-        conn = psycopg2.connect(**DB_CONFIG)
-        cur = conn.cursor()
-
-        # 대상 테이블 (예: stock_data)
-        table_name = "stock_data"
-
-        # DataFrame을 DB에 삽입
-        for _, row in df.iterrows():
-            query = f"""
-            INSERT INTO {table_name} (date, ticker, open, high, low, close, volume)
-            VALUES (%s, %s, %s, %s, %s, %s, %s);
-            """
-            cur.execute(query, (row["Date"], ticker, row["Open"], row["High"], row["Low"], row["Close"], row["Volume"]))
-
-        conn.commit()
-        cur.close()
-        conn.close()
-
-        end_time = datetime.now()
-        print(f"[DB 저장 완료] {parquet_file}")
-        log_to_db("DB 저장", "INFO", ticker, f"DB 저장 완료: {parquet_file}", from_date, to_date, start_time, end_time, "성공")
-
-    except Exception as e:
-        end_time = datetime.now()
-        print(f"[Error] {parquet_file}: {e}")
-        log_to_db("DB 저장", "ERROR", ticker, f"오류 발생: {e}", from_date, to_date, start_time, end_time, "실패")
-
-
-def store_all_parquet_to_db(root_folder=DEFAULT_PARQUET_FOLDER):
-    """
-    지정된 폴더 내의 모든 Parquet 파일을 PostgreSQL에 저장
-
-    :param root_folder: Parquet 파일이 저장된 루트 디렉토리
-    """
-    for root, _, files in os.walk(root_folder):
-        for file in files:
-            if file.endswith(".parquet"):
-                parquet_path = os.path.join(root, file)
-                store_parquet_to_db(parquet_path)
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="CSV 파일을 Parquet으로 변환하는 프로그램")
 
     parser.add_argument("--csv_file", type=str, help="변환할 단일 CSV 파일 경로")
     parser.add_argument("--folder", type=str, help="CSV 파일이 저장된 폴더")
     parser.add_argument("--log_file", type=str, default=DEFAULT_LOG_FILE_PATH, help="CSV 파일 로그 파일 경로")
-    parser.add_argument("--delete_csv", action="store_true", help="변환 후 CSV 파일 삭제 여부")
 
     args = parser.parse_args()
 
     if args.csv_file:
         # 특정 CSV 파일 변환
-        convert_csv_to_parquet(args.csv_file, delete_csv=args.delete_csv)
+        convert_csv_to_parquet(args.csv_file)
     elif args.folder:
         # 특정 폴더의 모든 CSV 변환
-        convert_all_csv_to_parquet(root_folder=args.folder, delete_csv=args.delete_csv)
+        convert_all_csv_to_parquet(root_folder=args.folder)
     else:
         # 로그 파일 기반으로 가장 최근 변환된 파일만 처리
-        convert_logged_csv_to_parquet(log_file=args.log_file, delete_csv=args.delete_csv)
+        convert_logged_csv_to_parquet(log_file=args.log_file)
 
 
 """
