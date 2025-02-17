@@ -129,29 +129,22 @@ def convert_csv_to_parquet(csv_file, delete_csv=False):
         print(f"[Error] {csv_file}: {e}")
         log_to_db("Parquet 변환", "ERROR", "ALL", f"오류 발생: {e}", from_date, to_date, start_time, end_time, "실패")
 
-def store_csv_to_db_with_pgfutter(csv_file, table_name="stock_data"):
+
+def store_csv_to_db_with_pgfutter(csv_file, target_table="stock_data"):
     """
-    pgfutter를 사용하여 CSV 데이터를 PostgreSQL에 저장
-    (1) 임시 테이블에 저장
-    (2) 데이터 검증 후 실제 테이블로 이동
-    (3) 임시 테이블 삭제
+    pgfutter를 사용하여 CSV 데이터를 PostgreSQL에 저장한 후, 원하는 테이블로 데이터 이동.
 
     :param csv_file: 변환할 CSV 파일 경로
-    :param table_name: 저장할 PostgreSQL 테이블명
+    :param target_table: 최종 저장할 PostgreSQL 테이블명
     """
-    temp_table_name = f"{table_name}_temp"  # 임시 테이블 이름
     conn = None
+    generated_table = os.path.splitext(os.path.basename(csv_file))[0]  # CSV 파일명이 테이블명
 
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()
 
-        # (1) 임시 테이블 생성 (실제 테이블과 동일한 구조)
-        cur.execute(f"CREATE TEMP TABLE {temp_table_name} (LIKE {table_name} INCLUDING ALL);")
-        conn.commit()
-        print(f"[INFO] 임시 테이블 생성 완료: {temp_table_name}")
-
-        # (2) 환경 변수 설정 후 pgfutter 실행하여 임시 테이블에 데이터 삽입
+        # ✅ (1) pgfutter 실행하여 데이터 저장
         env = os.environ.copy()
         env["PGDATABASE"] = DB_CONFIG["dbname"]
         env["PGUSER"] = DB_CONFIG["user"]
@@ -159,30 +152,26 @@ def store_csv_to_db_with_pgfutter(csv_file, table_name="stock_data"):
         env["PGHOST"] = DB_CONFIG["host"]
         env["PGPORT"] = DB_CONFIG["port"]
 
-        command = [
-            "pgfutter", "csv",
-            csv_file
-        ]
+        command = ["pgfutter", "csv", csv_file]
         subprocess.run(command, check=True, env=env)
-        print(f"[INFO] CSV 데이터 임시 테이블({temp_table_name}) 저장 완료")
+        print(f"[INFO] CSV 데이터 `{generated_table}` 테이블에 저장 완료")
 
-        # (3) 데이터 검증 (중복 제거)
+        # ✅ (2) 중복 데이터 제거 후, target_table로 이동
         cur.execute(f"""
-            DELETE FROM {temp_table_name} 
-            WHERE (ticker, date) IN (SELECT ticker, date FROM {table_name});
+            DELETE FROM {generated_table} 
+            WHERE (ticker, date) IN (SELECT ticker, date FROM {target_table});
         """)
         conn.commit()
         print(f"[INFO] 중복 데이터 제거 완료")
 
-        # (4) 임시 테이블 데이터를 실제 테이블로 이동
-        cur.execute(f"INSERT INTO {table_name} SELECT * FROM {temp_table_name};")
+        cur.execute(f"INSERT INTO {target_table} SELECT * FROM {generated_table};")
         conn.commit()
-        print(f"[INFO] 데이터 이동 완료: {table_name}")
+        print(f"[INFO] 데이터 `{target_table}`로 이동 완료")
 
-        # (5) 임시 테이블 삭제
-        cur.execute(f"DROP TABLE {temp_table_name};")
+        # ✅ (3) 원본 테이블 삭제
+        cur.execute(f"DROP TABLE {generated_table};")
         conn.commit()
-        print(f"[INFO] 임시 테이블 삭제 완료: {temp_table_name}")
+        print(f"[INFO] 자동 생성된 테이블 `{generated_table}` 삭제 완료")
 
         return True
 
@@ -197,7 +186,6 @@ def store_csv_to_db_with_pgfutter(csv_file, table_name="stock_data"):
     finally:
         if conn:
             conn.close()
-
 
 
 def convert_logged_csv_to_parquet(log_file=DEFAULT_LOG_FILE_PATH, delete_csv=False):
