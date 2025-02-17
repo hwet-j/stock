@@ -224,11 +224,15 @@ def main():
     parser = argparse.ArgumentParser(description="주식 데이터를 가져와 저장하는 프로그램")
 
     parser.add_argument("--tickers", nargs="+", default=DEFAULT_TICKERS, help="조회할 종목 코드 리스트 (예: AAPL MSFT TSLA)")
-    parser.add_argument("--from_date", type=str, default=(datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d"),
-                        help="시작 날짜 (예: 2024-01-01)")
-    parser.add_argument("--to_date", type=str, default=(datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d"),
-                        help="종료 날짜 (예: 2024-01-05)")
+    # parser.add_argument("--from_date", type=str, default=(datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d"),
+    #                     help="시작 날짜 (예: 2024-01-01)")
+    # parser.add_argument("--to_date", type=str, default=(datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d"),
+    #                     help="종료 날짜 (예: 2024-01-05)")
 
+    parser.add_argument("--from_date", type=str, default='2025-01-14',
+                        help="시작 날짜 (예: 2024-01-01)")
+    parser.add_argument("--to_date", type=str, default='2025-01-22',
+                        help="종료 날짜 (예: 2024-01-05)")
     args = parser.parse_args()
 
     create_log_tables_if_not_exists()  # 로그 테이블 생성

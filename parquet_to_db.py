@@ -122,6 +122,18 @@ def move_data_to_main_table(conn):
     start_time = datetime.now()
     try:
         cur = conn.cursor()
+
+        # ✅ 데이터 확인을 위해 먼저 SELECT 실행
+        cur.execute("SELECT * FROM stock_data_temp LIMIT 5;")
+        rows = cur.fetchall()
+        if rows:
+            print("[DEBUG] 임시 테이블 데이터 샘플:")
+            for row in rows:
+                print(row)
+        else:
+            print("[DEBUG] stock_data_temp에 데이터 없음")
+
+        # ✅ 데이터를 이동하는 INSERT 실행
         query = """
         INSERT INTO stock_data (date, ticker, open, high, low, close, volume, dividends, stock_splits)
         SELECT date, ticker, open, high, low, close, volume, dividends, stock_splits FROM stock_data_temp
@@ -158,7 +170,7 @@ def process_parquet(parquet_file):
     create_temp_table(conn)
     load_data_with_pgfutter(parquet_file)
     move_data_to_main_table(conn)
-    drop_temp_table(conn)
+    # drop_temp_table(conn)
 
     conn.close()
     end_time = datetime.now()
