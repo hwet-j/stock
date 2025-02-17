@@ -167,7 +167,10 @@ def store_csv_to_db_with_pgfutter(csv_file, table_name="stock_data"):
         print(f"[INFO] CSV 데이터 임시 테이블({temp_table_name}) 저장 완료")
 
         # (3) 데이터 검증 (예: 중복 제거)
-        cur.execute(f"DELETE FROM {temp_table_name} WHERE id IN (SELECT id FROM {table_name});")
+        cur.execute(f"""
+                    DELETE FROM {temp_table_name} 
+                    WHERE (ticker, date) IN (SELECT ticker, date FROM {table_name});
+                """)
         conn.commit()
         print(f"[INFO] 중복 데이터 제거 완료")
 
