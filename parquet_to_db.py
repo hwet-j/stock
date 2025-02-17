@@ -104,7 +104,7 @@ def load_data_with_pgfutter(parquet_file):
     """pgfutter를 이용해 Parquet 데이터를 임시 테이블에 저장"""
     start_time = datetime.now()
     cmd = [
-        "pgfutter", "csv",
+        "/usr/local/bin/pgfutter", "csv",
         "--dbname", DB_CONFIG["dbname"],
         "--host", DB_CONFIG["host"],
         "--port", DB_CONFIG["port"],
