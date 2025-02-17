@@ -73,6 +73,30 @@ def log_to_db(step, log_type, ticker, message, from_date=None, to_date=None, sta
         if conn:
             conn.close()
 
+def create_stock_data_table():
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+    create_table_query = """
+    CREATE TABLE IF NOT EXISTS stock_data (
+        date DATE,
+        open NUMERIC,
+        high NUMERIC,
+        low NUMERIC,
+        close NUMERIC,
+        volume BIGINT,
+        dividends NUMERIC,
+        stock_splits NUMERIC,
+        ticker TEXT,
+        capital_gains NUMERIC
+    );
+    """
+    cur.execute(create_table_query)
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+
 def convert_csv_to_parquet(csv_file, delete_csv=False):
     """
     지정된 CSV 파일을 Parquet 파일로 변환하여 기본 폴더(parquet/)에 저장
@@ -267,6 +291,8 @@ if __name__ == "__main__":
     parser.add_argument("--log_file", type=str, default=DEFAULT_LOG_FILE_PATH, help="CSV 파일 로그 파일 경로")
 
     args = parser.parse_args()
+
+    create_stock_data_table()
 
     if args.csv_file:
         # 특정 CSV 파일 변환
