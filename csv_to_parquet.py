@@ -138,7 +138,9 @@ def store_csv_to_db_with_pgfutter(csv_file, target_table="stock_data"):
     :param target_table: 최종 저장할 PostgreSQL 테이블명
     """
     conn = None
-    generated_table = os.path.splitext(os.path.basename(csv_file))[0]  # CSV 파일명이 테이블명
+
+    # ✅ 자동 생성될 테이블명 (하이픈을 언더스코어로 변경)
+    generated_table = os.path.splitext(os.path.basename(csv_file))[0].replace("-", "_")
 
     try:
         conn = psycopg2.connect(**DB_CONFIG)
