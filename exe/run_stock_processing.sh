@@ -46,14 +46,14 @@ if [ $? -ne 0 ]; then
 fi
 
 # Parquet파일 DB 저장
-echo "[INFO] parquet_to_db.py 실행 중..."
+#echo "[INFO] parquet_to_db.py 실행 중..."
 #/home/hwechang_jeong/.pyenv/versions/3.9.16/bin/python /home/hwechang_jeong/stock/parquet_to_db.py >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
 
-python /home/hwechang_jeong/stock/parquet_to_db.py >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
-if [ $? -ne 0 ]; then
-    echo "[ERROR] parquet_to_db.py 실행 실패" >> /home/hwechang_jeong/stock/exe/stock_data.log
-    exit 1
-fi
+#python /home/hwechang_jeong/stock/parquet_to_db.py >> /home/hwechang_jeong/stock/exe/stock_data.log 2>&1
+#if [ $? -ne 0 ]; then
+#    echo "[ERROR] parquet_to_db.py 실행 실패" >> /home/hwechang_jeong/stock/exe/stock_data.log
+#    exit 1
+#fi
 
 echo "[INFO] 실행 완료"
 
