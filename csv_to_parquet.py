@@ -223,7 +223,7 @@ def store_csv_to_db_with_pgfutter(csv_file, target_table="stock_data"):
         print(f"[INFO] 중복 데이터 제거 완료")
 
         cur.execute(f"""
-            INSERT INTO {target_table} (date, open, high, low, close, volume, dividends, stock_splits, ticker, capital_gains)
+            INSERT INTO {target_table} (date, open, high, low, close, volume, dividends, stock_splits, ticker)
             SELECT 
                 date::DATE, 
                 NULLIF(open, '')::NUMERIC, 
