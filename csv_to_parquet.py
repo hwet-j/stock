@@ -158,13 +158,6 @@ def store_csv_to_db_with_pgfutter(csv_file, target_table="stock_data"):
         # pgfutter 실행 명령어
         command = [
             "pgfutter", "csv",
-            "--db", DB_CONFIG["dbname"],
-            "--host", DB_CONFIG["host"],
-            "--port", str(DB_CONFIG["port"]),
-            "--user", DB_CONFIG["user"],
-            "--pass", DB_CONFIG["password"],
-            "--schema", schema,  # 스키마 지정 (기본값: public)
-            "--table", table_name,  # 저장할 테이블명
             csv_file  # 삽입할 CSV 파일
         ]
 
