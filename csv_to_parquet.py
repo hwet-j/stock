@@ -227,15 +227,15 @@ def store_csv_to_db_with_pgfutter(csv_file, target_table="stock_data"):
             INSERT INTO {target_table} (date, open, high, low, close, volume, dividends, stock_splits, ticker, capital_gains)
             SELECT 
                 date::DATE, 
-                open::NUMERIC, 
-                high::NUMERIC, 
-                low::NUMERIC, 
-                close::NUMERIC, 
-                volume::NUMERIC, 
-                dividends::NUMERIC, 
-                stock_splits::NUMERIC, 
+                NULLIF(open, '')::NUMERIC, 
+                NULLIF(high, '')::NUMERIC, 
+                NULLIF(low, '')::NUMERIC, 
+                NULLIF(close, '')::NUMERIC, 
+                NULLIF(volume, '')::NUMERIC, 
+                NULLIF(dividends, '')::NUMERIC, 
+                NULLIF(stock_splits, '')::NUMERIC, 
                 ticker, 
-                capital_gains::NUMERIC
+                NULLIF(capital_gains, '')::NUMERIC
             FROM {table_name};
         """)
         conn.commit()
