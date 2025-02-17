@@ -223,8 +223,12 @@ def store_csv_to_db_with_pgfutter(csv_file, target_table="stock_data"):
         conn.commit()
         print(f"[INFO] 중복 데이터 제거 완료")
 
-        cur.execute(f"INSERT INTO {target_table} SELECT * FROM {table_name};")
+        cur.execute(f"""
+            INSERT INTO {target_table} (date, open, high, low, close, volume, dividends, stock_splits, ticker, capital_gains)
+            SELECT date::DATE, open, high, low, close, volume, dividends, stock_splits, ticker, capital_gains FROM {table_name};
+        """)
         conn.commit()
+
         print(f"[INFO] 데이터 `{target_table}`로 이동 완료")
 
         # ✅ (3) 원본 테이블 삭제
