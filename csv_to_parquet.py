@@ -151,26 +151,28 @@ def store_csv_to_db_with_pgfutter(csv_file, table_name="stock_data"):
         conn.commit()
         print(f"[INFO] 임시 테이블 생성 완료: {temp_table_name}")
 
-        # (2) pgfutter를 사용하여 임시 테이블에 데이터 삽입
+        # (2) 환경 변수 설정 후 pgfutter 실행하여 임시 테이블에 데이터 삽입
+        env = os.environ.copy()
+        env["PGDATABASE"] = DB_CONFIG["dbname"]
+        env["PGUSER"] = DB_CONFIG["user"]
+        env["PGPASSWORD"] = DB_CONFIG["password"]
+        env["PGHOST"] = DB_CONFIG["host"]
+        env["PGPORT"] = DB_CONFIG["port"]
+
         command = [
             "pgfutter", "csv",
-            "--db", DB_CONFIG["dbname"],
-            "--host", DB_CONFIG["host"],
-            "--port", DB_CONFIG["port"],
-            "--user", DB_CONFIG["user"],
-            "--pass", DB_CONFIG["password"],
             "--schema", "public",
             "--table", temp_table_name,
             csv_file
         ]
-        subprocess.run(command, check=True)
+        subprocess.run(command, check=True, env=env)
         print(f"[INFO] CSV 데이터 임시 테이블({temp_table_name}) 저장 완료")
 
-        # (3) 데이터 검증 (예: 중복 제거)
+        # (3) 데이터 검증 (중복 제거)
         cur.execute(f"""
-                    DELETE FROM {temp_table_name} 
-                    WHERE (ticker, date) IN (SELECT ticker, date FROM {table_name});
-                """)
+            DELETE FROM {temp_table_name} 
+            WHERE (ticker, date) IN (SELECT ticker, date FROM {table_name});
+        """)
         conn.commit()
         print(f"[INFO] 중복 데이터 제거 완료")
 
@@ -197,6 +199,7 @@ def store_csv_to_db_with_pgfutter(csv_file, table_name="stock_data"):
     finally:
         if conn:
             conn.close()
+
 
 
 def convert_logged_csv_to_parquet(log_file=DEFAULT_LOG_FILE_PATH, delete_csv=False):
