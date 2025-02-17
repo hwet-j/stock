@@ -138,42 +138,59 @@ def store_csv_to_db_with_pgfutter(csv_file, target_table="stock_data"):
     :param target_table: 최종 저장할 PostgreSQL 테이블명
     """
     conn = None
-
-    # ✅ 자동 생성될 테이블명 (하이픈을 언더스코어로 변경)
-    generated_table = os.path.splitext(os.path.basename(csv_file))[0].replace("-", "_")
+    schema = "public"
+    table_name = target_table + '_temp'
 
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()
 
-        # ✅ (1) pgfutter 실행하여 데이터 저장
+        # 환경 변수 설정
         env = os.environ.copy()
-        env["PGDATABASE"] = DB_CONFIG["dbname"]
-        env["PGUSER"] = DB_CONFIG["user"]
-        env["PGPASSWORD"] = DB_CONFIG["password"]
-        env["PGHOST"] = DB_CONFIG["host"]
-        env["PGPORT"] = DB_CONFIG["port"]
+        env["DB_NAME"] = DB_CONFIG["dbname"]
+        env["DB_USER"] = DB_CONFIG["user"]
+        env["DB_PASS"] = DB_CONFIG["password"]
+        env["DB_HOST"] = DB_CONFIG["host"]
+        env["DB_PORT"] = str(DB_CONFIG["port"])
+        env["DB_SCHEMA"] = schema
+        env["DB_TABLE"] = table_name
 
-        command = ["pgfutter", "csv", csv_file]
-        subprocess.run(command, check=True, env=env)
-        print(f"[INFO] CSV 데이터 `{generated_table}` 테이블에 저장 완료")
+        # pgfutter 실행 명령어
+        command = [
+            "pgfutter", "csv",
+            "--db", DB_CONFIG["dbname"],
+            "--host", DB_CONFIG["host"],
+            "--port", str(DB_CONFIG["port"]),
+            "--user", DB_CONFIG["user"],
+            "--pass", DB_CONFIG["password"],
+            "--schema", schema,  # 스키마 지정 (기본값: public)
+            "--table", table_name,  # 저장할 테이블명
+            csv_file  # 삽입할 CSV 파일
+        ]
+
+        try:
+            subprocess.run(command, check=True, env=env)  # Python에서 실행
+            print(f"[INFO] CSV 데이터를 '{schema}.{table_name}' 테이블에 저장 완료")
+        except subprocess.CalledProcessError as e:
+            print(f"[ERROR] pgfutter 실행 실패: {e}")
+            return False
 
         # ✅ (2) 중복 데이터 제거 후, target_table로 이동
         cur.execute(f"""
-            DELETE FROM {generated_table} 
+            DELETE FROM {table_name} 
             WHERE (ticker, date) IN (SELECT ticker, date FROM {target_table});
         """)
         conn.commit()
         print(f"[INFO] 중복 데이터 제거 완료")
 
-        cur.execute(f"INSERT INTO {target_table} SELECT * FROM {generated_table};")
+        cur.execute(f"INSERT INTO {target_table} SELECT * FROM {table_name};")
         conn.commit()
         print(f"[INFO] 데이터 `{target_table}`로 이동 완료")
 
         # ✅ (3) 원본 테이블 삭제
-        cur.execute(f"DROP TABLE {generated_table};")
+        cur.execute(f"DROP TABLE {table_name};")
         conn.commit()
-        print(f"[INFO] 자동 생성된 테이블 `{generated_table}` 삭제 완료")
+        print(f"[INFO] 자동 생성된 테이블 `{table_name}` 삭제 완료")
 
         return True
 
