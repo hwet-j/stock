@@ -127,9 +127,6 @@ def is_market_closed(date):
 def save_csv(data, from_date):
     """ CSV 파일을 저장할 폴더를 생성하고 데이터를 저장하는 함수 """
     try:
-        # 컬럼명(헤더) 공백을 언더바(_)로 변경
-        data.columns = [col.replace(" ", "_") for col in data.columns]
-
         # `from_date`를 문자열로 변환 후 `-`를 기준으로 연도(year), 월(month), 일(day) 분리
         year, month, _ = str(from_date).split("-")
 
