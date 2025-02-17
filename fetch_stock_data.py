@@ -130,17 +130,20 @@ def save_csv(data, from_date):
         # `from_date`를 문자열로 변환 후 `-`를 기준으로 연도(year), 월(month), 일(day) 분리
         year, month, _ = str(from_date).split("-")
 
-        # 저장할 폴더 경로 생성 (예: `csv/2024/02/`)
+        # 저장할 폴더 경로 생성 (예: `csv/2025/01/`)
         folder_path = os.path.join("csv", year, month)
 
         # `os.makedirs()`를 사용하여 폴더 생성 (`exist_ok=True`로 이미 존재하면 무시)
         os.makedirs(folder_path, exist_ok=True)
 
-        # CSV 파일명 생성 (예: `stock_data_2024-02-07.csv`)
+        # CSV 파일명 생성 (예: `stock_data_2025-01-14.csv`)
         file_name = f"stock_data_{from_date}.csv"
 
         # 폴더 경로와 파일명을 결합하여 최종 저장 경로 설정
         file_path = os.path.join(folder_path, file_name)
+
+        # `Capital Gains` 컬럼이 있으면 제거 (대소문자 정확히 맞춰야 함)
+        data = data.drop(columns=["Capital Gains"], errors="ignore")
 
         # 데이터프레임을 CSV 파일로 저장 (index=False로 인덱스는 저장하지 않음)
         data.to_csv(file_path, index=False)
@@ -152,7 +155,8 @@ def save_csv(data, from_date):
 
         return file_path  # 저장된 파일 경로 반환
     except Exception as e:
-        return print(e)  # 예외 발생 시 오류 메시지 출력 (실제로는 로그에 기록하는 것이 더 좋음)
+        print(f"[ERROR] CSV 저장 실패: {e}")  # 예외 발생 시 오류 메시지 출력
+        return None  # 실패 시 None 반환
 
 
 def fetch_stock_data(tickers, from_date, to_date):

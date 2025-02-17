@@ -86,8 +86,7 @@ def create_stock_data_table():
         volume BIGINT,
         dividends NUMERIC,
         stock_splits NUMERIC,
-        ticker TEXT,
-        capital_gains NUMERIC
+        ticker TEXT
     );
     """
     cur.execute(create_table_query)
@@ -234,8 +233,7 @@ def store_csv_to_db_with_pgfutter(csv_file, target_table="stock_data"):
                 NULLIF(volume, '')::NUMERIC, 
                 NULLIF(dividends, '')::NUMERIC, 
                 NULLIF(stock_splits, '')::NUMERIC, 
-                ticker, 
-                NULLIF(capital_gains, '')::NUMERIC
+                ticker
             FROM {table_name};
         """)
         conn.commit()
