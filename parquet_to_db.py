@@ -15,14 +15,6 @@ DB_CONFIG = {
 
 LOG_FILE_PATH = "/home/hwechang_jeong/stock/exe/parquet_files.log"
 
-def log_to_file(message):
-    """파일 로그 저장"""
-    try:
-        with open(LOG_FILE_PATH, "a") as log_file:
-            log_file.write(f"{datetime.now()} - {message}\n")
-    except Exception as e:
-        print(f"[파일 로그 오류] {e}")
-
 def log_to_db(step, log_type, message, start_time, end_time=None, result=None):
     """DB 로그 저장"""
     conn = None
@@ -126,11 +118,9 @@ def load_data_with_pgfutter(parquet_file):
         subprocess.run(cmd, check=True)
         print(f"[INFO] pgfutter로 {parquet_file} 임시 테이블에 적재 완료")
         log_to_db("pgfutter 실행", "INFO", f"{parquet_file} 적재 완료", start_time, result="성공")
-        log_to_file(f"[INFO] {parquet_file} pgfutter 적재 완료")
     except subprocess.CalledProcessError as e:
         print(f"[Error] pgfutter 실행 실패: {e}")
         log_to_db("pgfutter 실행", "ERROR", str(e), start_time, result="실패")
-        log_to_file(f"[ERROR] {parquet_file} pgfutter 적재 실패: {e}")
 
 def move_data_to_main_table(conn):
     """임시 테이블 데이터를 실제 테이블(stock_data)로 이동"""
@@ -147,11 +137,9 @@ def move_data_to_main_table(conn):
         cur.close()
         print("[INFO] 임시 테이블 데이터가 stock_data로 이동 완료")
         log_to_db("데이터 이동", "INFO", "데이터 이동 완료", start_time, result="성공")
-        log_to_file("[INFO] 임시 테이블 데이터 이동 완료")
     except Exception as e:
         print(f"[Error] 데이터 이동 실패: {e}")
         log_to_db("데이터 이동", "ERROR", str(e), start_time, result="실패")
-        log_to_file(f"[ERROR] 데이터 이동 실패: {e}")
 
 def drop_temp_table(conn):
     """임시 테이블 삭제"""
@@ -161,10 +149,8 @@ def drop_temp_table(conn):
         conn.commit()
         cur.close()
         print("[INFO] 임시 테이블 삭제 완료")
-        log_to_file("[INFO] 임시 테이블 삭제 완료")
     except Exception as e:
         print(f"[Error] 임시 테이블 삭제 실패: {e}")
-        log_to_file(f"[ERROR] 임시 테이블 삭제 실패: {e}")
 
 def process_parquet(parquet_file):
     """Parquet 데이터를 처리하는 전체 과정"""
@@ -181,11 +167,10 @@ def process_parquet(parquet_file):
     end_time = datetime.now()
     print(f"[INFO] 전체 작업 완료 (소요 시간: {end_time - start_time})")
     log_to_db("전체 프로세스", "INFO", "작업 완료", start_time, end_time, "성공")
-    log_to_file("[INFO] 전체 작업 완료")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parquet 파일을 DB에 저장하는 프로그램")
-    parser.add_argument("--parquet_file", type=str, required=True, help="저장할 Parquet 파일 경로")
+    parser.add_argument("--parquet_file", type=str, default=LOG_FILE_PATH, help="저장할 Parquet 파일 경로")
     args = parser.parse_args()
 
     process_parquet(args.parquet_file)
