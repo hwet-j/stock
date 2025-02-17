@@ -161,7 +161,6 @@ def store_csv_to_db_with_pgfutter(csv_file, table_name="stock_data"):
 
         command = [
             "pgfutter", "csv",
-            "--table", temp_table_name,
             csv_file
         ]
         subprocess.run(command, check=True, env=env)
