@@ -130,25 +130,6 @@ def convert_csv_to_parquet(csv_file, delete_csv=False):
         log_to_db("Parquet 변환", "ERROR", "ALL", f"오류 발생: {e}", from_date, to_date, start_time, end_time, "실패")
 
 
-def fix_csv_headers(input_file, output_file):
-    """
-    CSV 파일의 헤더에서 공백을 언더스코어(_)로 변경
-    """
-    with open(input_file, newline='', encoding='utf-8') as infile, open(output_file, "w", newline='', encoding='utf-8') as outfile:
-        reader = csv.reader(infile)
-        writer = csv.writer(outfile)
-
-        # (1) 헤더 수정: 공백을 언더스코어(_)로 변경
-        header = next(reader)
-        new_header = [col.replace(" ", "_") for col in header]  # 공백 → "_"
-        writer.writerow(new_header)
-
-        # (2) 데이터 그대로 복사
-        for row in reader:
-            writer.writerow(row)
-
-
-
 def store_csv_to_db_with_pgfutter(csv_file, target_table="stock_data"):
     """
     pgfutter를 사용하여 CSV 데이터를 PostgreSQL에 저장한 후, 원하는 테이블로 데이터 이동.
@@ -159,10 +140,6 @@ def store_csv_to_db_with_pgfutter(csv_file, target_table="stock_data"):
     conn = None
     schema = "public"
     table_name = target_table + '_temp'
-
-    fixed_csv_file = csv_file.replace(".csv", "_fixed.csv")
-    fix_csv_headers(csv_file, fixed_csv_file)
-
 
     try:
         conn = psycopg2.connect(**DB_CONFIG)
@@ -181,7 +158,7 @@ def store_csv_to_db_with_pgfutter(csv_file, target_table="stock_data"):
         # pgfutter 실행 명령어
         command = [
                 "pgfutter", "csv", 
-            fixed_csv_file  # 삽입할 CSV 파일
+            csv_file  # 삽입할 CSV 파일
         ]
 
         try:
@@ -194,7 +171,7 @@ def store_csv_to_db_with_pgfutter(csv_file, target_table="stock_data"):
         # ✅ (2) 중복 데이터 제거 후, target_table로 이동
         cur.execute(f"""
             DELETE FROM {table_name} 
-            WHERE (ticker, date) IN (SELECT ticker, date FROM {target_table});
+            WHERE (ticker, date::TEXT) IN (SELECT ticker, date::TEXT FROM {target_table});
         """)
         conn.commit()
         print(f"[INFO] 중복 데이터 제거 완료")
