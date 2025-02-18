@@ -144,7 +144,6 @@ def save_csv(data, from_date):
 
         # `Capital Gains` 컬럼이 있으면 제거 (대소문자 정확히 맞춰야 함)
         data = data.drop(columns=["Capital Gains"], errors="ignore")
-        data = data.applymap(lambda x: x.replace("\r", "") if isinstance(x, str) else x)
 
         # 데이터프레임을 CSV 파일로 저장 (index=False로 인덱스는 저장하지 않음)
         data.to_csv(file_path, index=False)
