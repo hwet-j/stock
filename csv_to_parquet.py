@@ -284,9 +284,10 @@ def convert_logged_csv_to_parquet(log_file=DEFAULT_LOG_FILE_PATH, delete_csv=Fal
     # 변환 완료 후 로그 파일 초기화
     os.remove(log_file)
 
+
 def convert_all_csv_to_parquet(root_folder="csv", delete_csv=False):
     """
-    지정된 폴더 내의 모든 CSV 파일을 찾아 Parquet 파일로 변환하여 기본 폴더(parquet/)에 저장
+    지정된 폴더 내의 모든 CSV 파일을 찾아 Parquet 파일로 변환한 후 PostgreSQL에 적재
 
     :param root_folder: CSV 파일이 저장된 루트 디렉토리
     :param delete_csv: 변환 후 CSV 파일 삭제 여부
@@ -295,7 +296,18 @@ def convert_all_csv_to_parquet(root_folder="csv", delete_csv=False):
         for file in files:
             if file.endswith(".csv"):
                 csv_path = os.path.join(root, file)
-                convert_csv_to_parquet(csv_path, delete_csv=delete_csv)
+
+                # ✅ CSV → Parquet 변환
+                convert_csv_to_parquet(csv_path, delete_csv=False)  # CSV 삭제는 후속 작업에서 처리
+
+                # ✅ PostgreSQL에 적재 (pgfutter 사용)
+                success = store_csv_to_db_with_pgfutter(csv_path)
+
+                # ✅ 적재 완료 후 CSV 삭제 (옵션에 따라)
+                if delete_csv and success:
+                    os.remove(csv_path)
+                    print(f"[INFO] CSV 파일 삭제 완료: {csv_path}")
+                    log_to_db("CSV 삭제", "INFO", "ALL", "CSV 파일 삭제 완료", result="성공")
 
 
 if __name__ == "__main__":
