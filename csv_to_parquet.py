@@ -222,7 +222,7 @@ def store_csv_to_db_with_pgfutter(csv_file, target_table="stock_data"):
             WHERE (ticker, date::TEXT) IN (SELECT ticker, date::TEXT FROM {target_table});
         """)
         conn.commit()
-        print(f"[INFO] 중복 데이터 제거 완료")
+        # print(f"[INFO] 중복 데이터 제거 완료")
 
         cur.execute(f"""
             INSERT INTO {target_table} (date, open, high, low, close, volume, dividends, stock_splits, ticker)
@@ -245,7 +245,7 @@ def store_csv_to_db_with_pgfutter(csv_file, target_table="stock_data"):
         # ✅ (3) 원본 테이블 삭제
         cur.execute(f"DROP TABLE {table_name};")
         conn.commit()
-        print(f"[INFO] 자동 생성된 테이블 `{table_name}` 삭제 완료")
+        # print(f"[INFO] 자동 생성된 테이블 `{table_name}` 삭제 완료")
 
         return True
 
