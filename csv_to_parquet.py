@@ -208,10 +208,12 @@ def store_csv_to_db_with_pgfutter(csv_file, target_table="stock_data"):
         ]
 
         try:
-            subprocess.run(command, check=True, env=env)  # Python에서 실행
+            result = subprocess.run(command, check=True, env=env, capture_output=True, text=True)
             print(f"[INFO] CSV 데이터를 '{schema}.{table_name}' 테이블에 저장 완료")
+            log_to_db("CSV 적재", "INFO", "ALL", f"pgfutter 실행 완료: {result.stdout}")
         except subprocess.CalledProcessError as e:
             print(f"[ERROR] pgfutter 실행 실패: {e}")
+            log_to_db("CSV 적재", "ERROR", "ALL", f"pgfutter 실행 실패: {e.stderr}")
             return False
 
         # ✅ (2) 중복 데이터 제거 후, target_table로 이동
